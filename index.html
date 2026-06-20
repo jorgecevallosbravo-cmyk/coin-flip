@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elige tu horario – ESPAM MFL</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f5;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:2rem 1rem}
+.wrap{width:100%;max-width:480px}
+.header{text-align:center;margin-bottom:1.75rem}
+.header p.eyebrow{font-size:11px;color:#999;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+.header h1{font-size:22px;font-weight:600;color:#1a1a1a;margin-bottom:4px}
+.header p.sub{font-size:14px;color:#666}
+.coin-scene{perspective:800px;width:160px;height:160px;margin:0 auto 1.75rem}
+.coin{width:160px;height:160px;position:relative;transform-style:preserve-3d;transform:rotateY(0deg)}
+.coin.flip-a{animation:flipToA 2.7s ease-in-out forwards}
+.coin.flip-b{animation:flipToB 2.7s ease-in-out forwards}
+.coin-face,.coin-back{position:absolute;inset:0;border-radius:50%;backface-visibility:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border:5px solid #BA7317;background:#FAEEDA}
+.coin-back{transform:rotateY(180deg)}
+@keyframes flipToA{0%{transform:rotateY(0deg)}100%{transform:rotateY(1440deg)}}
+@keyframes flipToB{0%{transform:rotateY(0deg)}100%{transform:rotateY(1620deg)}}
+.coin-face i,.coin-back i{font-size:30px;color:#BA7317}
+.coin-label{font-size:12px;font-weight:600;color:#633806;text-align:center;line-height:1.4}
+.card{background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:1.25rem}
+label.field-label{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:8px}
+input.ni{width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;font-size:14px;color:#1a1a1a;outline:none;font-family:inherit}
+input.ni:focus{border-color:#BA7317;box-shadow:0 0 0 3px rgba(186,115,23,.15)}
+.hint{font-size:12px;color:#aaa;margin:8px 0 14px}
+.btn-primary{background:#BA7317;border:none;border-radius:8px;padding:12px 32px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:8px}
+.btn-primary:hover{opacity:.88}.btn-primary:active{transform:scale(.98)}
+.btn-primary:disabled{opacity:.45;cursor:default}
+.btn-secondary{background:#fff;border:1px solid #ddd;border-radius:8px;padding:10px 24px;color:#444;font-size:14px;cursor:pointer;font-family:inherit}
+.btn-secondary:hover{background:#f5f5f5}
+.center{text-align:center}
+.alert{padding:12px 14px;border-radius:8px;margin-bottom:14px}
+.alert.danger{background:#fef2f2;border:1px solid #fca5a5}
+.alert.danger .title{font-size:13px;font-weight:600;color:#b91c1c;margin-bottom:2px}
+.alert.success{background:#f0fdf4;border:1px solid #86efac}
+.alert.success .title{font-size:13px;font-weight:600;color:#15803d;margin-bottom:2px}
+.alert .body{font-size:12px;color:#666}
+.match-item{padding:10px 14px;border:1px solid #e5e5e5;border-radius:8px;margin-bottom:8px;cursor:pointer;font-size:14px;color:#1a1a1a}
+.match-item:hover{background:#f9f9f9}
+.confirm-name{font-size:17px;font-weight:600;color:#1a1a1a;margin-bottom:20px}
+.confirm-q{font-size:14px;color:#666;margin-bottom:6px}
+.btn-row{display:flex;gap:10px;justify-content:center}
+.result-label{font-size:18px;font-weight:600;color:#1a1a1a;margin-bottom:4px}
+.result-ok{font-size:12px;color:#15803d}
+.divider{border-top:1px solid #f0f0f0;padding-top:1rem;margin-top:1rem}
+.tally-header{font-size:11px;color:#aaa;text-transform:uppercase;letter-spacing:1px;margin:0 0 14px;text-align:center}
+.tally-row{margin-bottom:12px}
+.tally-meta{display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px}
+.tally-meta .opt{color:#1a1a1a}.tally-meta .num{color:#888}
+.track{height:8px;background:#f0f0f0;border-radius:4px;overflow:hidden}
+.fill{height:100%;border-radius:4px;transition:width .5s ease}
+.footer{text-align:center;margin-top:1rem;font-size:11px;color:#bbb}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <p class="eyebrow">ESPAM MFL · examen</p>
+    <h1>Elige tu horario</h1>
+    <p class="sub">Lanza la moneda para votar por el horario del examen</p>
+  </div>
+
+  <div class="coin-scene">
+    <div class="coin" id="coin">
+      <div class="coin-face">
+        <i class="ti ti-sun"></i>
+        <div class="coin-label">10:00 – 11:00<br>A.M.</div>
+      </div>
+      <div class="coin-back">
+        <i class="ti ti-moon"></i>
+        <div class="coin-label">4:00 – 5:00<br>P.M.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="card"></div>
+  <p class="footer">Cada estudiante puede votar una sola vez</p>
+</div>
+
+<script>
+const ROSTER=[
+  {id:"angie.alcivarc.0122@espam.edu.ec",label:"Alcivar Castro Angie Jomaira"},
+  {id:"milena.alcivar.0122@espam.edu.ec",label:"Alcivar Murillo Milena Marilu"},
+  {id:"willians.arteaga.0121@espam.edu.ec",label:"Arteaga Medranda Willians Vicente"},
+  {id:"yajaira.bailon.0124@espam.edu.ec",label:"Bailon Vera Yajaira Lisseth"},
+  {id:"sandra.baldeon.0124@espam.edu.ec",label:"Baldeon Brito Sandra Elena"},
+  {id:"andrea.basurto.0223@espam.edu.ec",label:"Basurto Zambrano Andrea Moncerrate"},
+  {id:"sara.bravo.0122@espam.edu.ec",label:"Bravo Quintero Sara Nicole"},
+  {id:"leyly.brito.0222@espam.edu.ec",label:"Brito Vega Leyly Koreima"},
+  {id:"andrea.caicedo.0123@espam.edu.ec",label:"Caicedo Veliz Andrea Damaris"},
+  {id:"maria.carranza.0223@espam.edu.ec",label:"Carranza Avalos Maria Auxiliadora"},
+  {id:"divina.centeno.0222@espam.edu.ec",label:"Centeno Mendieta Divina Valentina"},
+  {id:"maria.cusmes.0122@espam.edu.ec",label:"Cusme Sacon Maria Mercedes"},
+  {id:"julexy.ganchozo.0222@espam.edu.ec",label:"Ganchozo Bravo Julexy Nicolle"},
+  {id:"hernan.guanuche.0123@espam.edu.ec",label:"Guanuche Montero Hernan Ismael"},
+  {id:"daniela.guerrero.0122@espam.edu.ec",label:"Guerrero Alcivar Daniela Dolores"},
+  {id:"andrea.macas.0124@espam.edu.ec",label:"Macas Aguilar Andrea Elizabeth"},
+  {id:"maria.macias.0221@espam.edu.ec",label:"Macias Pincay Maria Nicole"},
+  {id:"milena.mejia.0122@espam.edu.ec",label:"Mejia Pincay Milena Dayana"},
+  {id:"jorge.mendoza.0124@espam.edu.ec",label:"Mendoza Loor Jorge Alberto"},
+  {id:"juan.molina.0122@espam.edu.ec",label:"Molina Andrade Juan Mathias"},
+  {id:"edgar.montaguano.0124@espam.edu.ec",label:"Montaguano Viscaino Edgar Antonio"},
+  {id:"gabriela.mora.41@espam.edu.ec",label:"Mora Manzaba Gabriela Monserrate"},
+  {id:"maria.moreno.0123@espam.edu.ec",label:"Moreno Cedeno Maria Mercedes"},
+  {id:"kennia.ormaza.0222@espam.edu.ec",label:"Ormaza Lopez Kennia Anahi"},
+  {id:"maria.parragav.0222@espam.edu.ec",label:"Parraga Vidal Maria Teresa"},
+  {id:"juliana.quiroz.0122@espam.edu.ec",label:"Quiroz Barre Juliana Katherine"},
+  {id:"antony.solorzano.0124@espam.edu.ec",label:"Solorzano Alava Antony Daniel"},
+  {id:"gema.solorzano.0122@espam.edu.ec",label:"Solorzano Basurto Gema Lucia"},
+  {id:"juan.solorzano.0123@espam.edu.ec",label:"Solorzano Miranda Juan Adonis"},
+  {id:"roberto.valverde.0124@espam.edu.ec",label:"Valverde Verduga Roberto Jossue"},
+  {id:"lourdes.vera.0222@espam.edu.ec",label:"Vera Quijije Lourdes Jazmina"},
+  {id:"joao.vinces.0222@espam.edu.ec",label:"Vinces Loor Joao Javier"},
+  {id:"damaris.zambrano.4924@espam.edu.ec",label:"Zambrano Buste Damaris Abigail"},
+  {id:"gema.zambranog.41@espam.edu.ec",label:"Zambrano Ganchozo Gema Geniffer"},
+  {id:"juleysy.zambrano.0222@espam.edu.ec",label:"Zambrano Giler Juleysy Jamileth"},
+];
+
+const STORAGE_KEY="cf_espam_votes_v1";
+const coin=document.getElementById("coin");
+const card=document.getElementById("card");
+
+function norm(s){return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z\s]/g,"").trim();}
+function findMatch(t){
+  const words=norm(t).split(/\s+/).filter(Boolean);
+  if(words.length<2)return[];
+  return ROSTER.filter(s=>words.every(w=>norm(s.label).includes(w)));
+}
+
+function getVotes(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||"{}");}catch{return{};}}
+function saveVote(id,choice){
+  const v=getVotes();v[id]=choice;
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(v));
+}
+
+function tally(){
+  const v=getVotes();
+  const vals=Object.values(v);
+  const A=vals.filter(x=>x==="A").length;
+  const B=vals.filter(x=>x==="B").length;
+  return{A,B,total:A+B};
+}
+
+function tallyHTML(){
+  const t=tally();
+  if(t.total===0)return"";
+  const pA=Math.round(t.A/t.total*100);
+  const pB=100-pA;
+  return`<div class="divider">
+    <p class="tally-header">Resultados · ${t.total} de ${ROSTER.length} votos</p>
+    <div class="tally-row">
+      <div class="tally-meta"><span class="opt">10:00 – 11:00 A.M.</span><span class="num">${t.A} voto${t.A!==1?"s":""} · ${pA}%</span></div>
+      <div class="track"><div class="fill" style="width:${pA}%;background:#378ADD"></div></div>
+    </div>
+    <div class="tally-row">
+      <div class="tally-meta"><span class="opt">4:00 – 5:00 P.M.</span><span class="num">${t.B} voto${t.B!==1?"s":""} · ${pB}%</span></div>
+      <div class="track"><div class="fill" style="width:${pB}%;background:#D85A30"></div></div>
+    </div>
+  </div>`;
+}
+
+function showType(){
+  coin.className="coin";
+  coin.style.transform="";
+  card.innerHTML=`
+    <label class="field-label">Escriba sus apellidos y nombres</label>
+    <input class="ni" id="ni" type="text" placeholder="Ej: Zambrano Giler Juleysy Jamileth" autocomplete="off">
+    <p class="hint">Ingrese sus apellidos seguidos de sus nombres, tal como aparecen en el registro.</p>
+    <div class="center"><button class="btn-primary" id="btnVerify" disabled><i class="ti ti-check"></i> Verificar</button></div>
+    ${tallyHTML()}`;
+  const ni=document.getElementById("ni");
+  const btn=document.getElementById("btnVerify");
+  ni.addEventListener("input",()=>{btn.disabled=ni.value.trim().length<4;});
+  ni.addEventListener("keydown",e=>{if(e.key==="Enter"&&!btn.disabled)verify(ni.value);});
+  btn.addEventListener("click",()=>verify(ni.value));
+  ni.focus();
+}
+
+function verify(typed){
+  const found=findMatch(typed);
+  if(found.length===0){showNotFound();return;}
+  if(found.length>1){showAmbiguous(found);return;}
+  const s=found[0];
+  const votes=getVotes();
+  if(votes[s.id]!==undefined){showAlready(s,votes[s.id]);return;}
+  showConfirm(s);
+}
+
+function showNotFound(){
+  card.innerHTML=`
+    <div class="alert danger">
+      <div class="title"><i class="ti ti-x"></i> No encontrado</div>
+      <div class="body">No se encontró ese nombre en el registro. Verifique la ortografía e intente de nuevo.</div>
+    </div>
+    <div class="center"><button class="btn-secondary" id="btnRetry">Intentar de nuevo</button></div>
+    ${tallyHTML()}`;
+  document.getElementById("btnRetry").addEventListener("click",showType);
+}
+
+function showAmbiguous(matches){
+  card.innerHTML=`<p style="font-size:13px;color:#666;margin-bottom:12px">Se encontraron varios resultados. ¿Cuál es usted?</p>`
+    +matches.map(s=>`<div class="match-item" data-id="${s.id}">${s.label}</div>`).join("")
+    +tallyHTML();
+  card.querySelectorAll(".match-item").forEach(el=>{
+    el.addEventListener("click",()=>{
+      const s=ROSTER.find(r=>r.id===el.dataset.id);
+      const votes=getVotes();
+      if(votes[s.id]!==undefined){showAlready(s,votes[s.id]);return;}
+      showConfirm(s);
+    });
+  });
+}
+
+function showConfirm(s){
+  card.innerHTML=`
+    <div class="center">
+      <p class="confirm-q">¿Es usted?</p>
+      <p class="confirm-name">${s.label}</p>
+      <div class="btn-row">
+        <button class="btn-secondary" id="btnNotMe">No soy yo</button>
+        <button class="btn-primary" id="btnYesMe"><i class="ti ti-check"></i> Sí, soy yo</button>
+      </div>
+    </div>
+    ${tallyHTML()}`;
+  document.getElementById("btnNotMe").addEventListener("click",showType);
+  document.getElementById("btnYesMe").addEventListener("click",()=>showReady(s));
+}
+
+function showReady(s){
+  const firstName=s.label.split(" ").slice(2).join(" ");
+  card.innerHTML=`
+    <div class="center">
+      <p style="font-size:13px;color:#666;margin-bottom:14px">Bienvenido/a, <strong>${firstName}</strong>. ¡Es su turno!</p>
+      <button class="btn-primary" id="btnFlip"><i class="ti ti-coin"></i> Lanzar moneda</button>
+    </div>
+    ${tallyHTML()}`;
+  document.getElementById("btnFlip").addEventListener("click",()=>doFlip(s));
+}
+
+function doFlip(s){
+  const choice=Math.random()<.5?"A":"B";
+  coin.className="coin flip-"+choice.toLowerCase();
+  card.innerHTML=`<div class="center" style="color:#888;font-size:14px">Lanzando...</div>${tallyHTML()}`;
+  setTimeout(()=>{
+    saveVote(s.id,choice);
+    showDone(choice);
+  },2800);
+}
+
+function showDone(choice){
+  const label=choice==="A"?"10:00 – 11:00 A.M.":"4:00 – 5:00 P.M.";
+  card.innerHTML=`
+    <div class="center">
+      <p class="result-label">${label}</p>
+      <p class="result-ok"><i class="ti ti-check"></i> Voto registrado</p>
+    </div>
+    ${tallyHTML()}`;
+}
+
+function showAlready(s,choice){
+  const label=choice==="A"?"10:00 – 11:00 A.M.":"4:00 – 5:00 P.M.";
+  coin.style.transform=choice==="B"?"rotateY(180deg)":"rotateY(0deg)";
+  card.innerHTML=`
+    <div class="alert success">
+      <div class="title"><i class="ti ti-check"></i> Ya votó</div>
+      <div class="body">Su voto: ${label}</div>
+    </div>
+    ${tallyHTML()}`;
+}
+
+showType();
+</script>
+</body>
+</html>
