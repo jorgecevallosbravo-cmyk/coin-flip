@@ -83,6 +83,9 @@ input.ni:focus{border-color:#BA7317;box-shadow:0 0 0 3px rgba(186,115,23,.15)}
 </div>
 
 <script>
+// ✏️ Replace with your Railway URL after deploying
+const API = "REPLACE_WITH_RAILWAY_URL";
+
 const ROSTER=[
   {id:"angie.alcivarc.0122@espam.edu.ec",label:"Alcivar Castro Angie Jomaira"},
   {id:"milena.alcivar.0122@espam.edu.ec",label:"Alcivar Murillo Milena Marilu"},
@@ -121,7 +124,6 @@ const ROSTER=[
   {id:"juleysy.zambrano.0222@espam.edu.ec",label:"Zambrano Giler Juleysy Jamileth"},
 ];
 
-const STORAGE_KEY="cf_espam_votes_v1";
 const coin=document.getElementById("coin");
 const card=document.getElementById("card");
 
@@ -132,27 +134,27 @@ function findMatch(t){
   return ROSTER.filter(s=>words.every(w=>norm(s.label).includes(w)));
 }
 
-function getVotes(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||"{}");}catch{return{};}}
-function saveVote(id,choice){
-  const v=getVotes();v[id]=choice;
-  localStorage.setItem(STORAGE_KEY,JSON.stringify(v));
+async function apiCheck(sid){
+  try{const r=await fetch(`${API}/api/check/${sid}`);return r.json();}catch{return{voted:false,choice:null};}
+}
+async function apiVote(sid,name,choice){
+  try{
+    const r=await fetch(`${API}/api/vote`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:sid,name,choice})});
+    return r.json();
+  }catch{return{error:"network"};}
+}
+async function apiTally(){
+  try{const r=await fetch(`${API}/api/tally`);return r.json();}catch{return{A:0,B:0};}
 }
 
-function tally(){
-  const v=getVotes();
-  const vals=Object.values(v);
-  const A=vals.filter(x=>x==="A").length;
-  const B=vals.filter(x=>x==="B").length;
-  return{A,B,total:A+B};
-}
-
-function tallyHTML(){
-  const t=tally();
-  if(t.total===0)return"";
-  const pA=Math.round(t.A/t.total*100);
+async function tallyHTML(){
+  const t=await apiTally();
+  const total=t.A+t.B;
+  if(total===0)return"";
+  const pA=Math.round(t.A/total*100);
   const pB=100-pA;
   return`<div class="divider">
-    <p class="tally-header">Resultados · ${t.total} de ${ROSTER.length} votos</p>
+    <p class="tally-header">Resultados · ${total} de ${ROSTER.length} votos</p>
     <div class="tally-row">
       <div class="tally-meta"><span class="opt">10:00 – 11:00 A.M.</span><span class="num">${t.A} voto${t.A!==1?"s":""} · ${pA}%</span></div>
       <div class="track"><div class="fill" style="width:${pA}%;background:#378ADD"></div></div>
@@ -164,15 +166,15 @@ function tallyHTML(){
   </div>`;
 }
 
-function showType(){
-  coin.className="coin";
-  coin.style.transform="";
+async function showType(){
+  coin.className="coin";coin.style.transform="";
+  const tHtml=await tallyHTML();
   card.innerHTML=`
     <label class="field-label">Escriba sus apellidos y nombres</label>
     <input class="ni" id="ni" type="text" placeholder="Ej: Zambrano Giler Juleysy Jamileth" autocomplete="off">
     <p class="hint">Ingrese sus apellidos seguidos de sus nombres, tal como aparecen en el registro.</p>
     <div class="center"><button class="btn-primary" id="btnVerify" disabled><i class="ti ti-check"></i> Verificar</button></div>
-    ${tallyHTML()}`;
+    ${tHtml}`;
   const ni=document.getElementById("ni");
   const btn=document.getElementById("btnVerify");
   ni.addEventListener("input",()=>{btn.disabled=ni.value.trim().length<4;});
@@ -181,42 +183,43 @@ function showType(){
   ni.focus();
 }
 
-function verify(typed){
+async function verify(typed){
   const found=findMatch(typed);
   if(found.length===0){showNotFound();return;}
   if(found.length>1){showAmbiguous(found);return;}
   const s=found[0];
-  const votes=getVotes();
-  if(votes[s.id]!==undefined){showAlready(s,votes[s.id]);return;}
+  const status=await apiCheck(s.id);
+  if(status.voted){showAlready(s,status.choice);return;}
   showConfirm(s);
 }
 
-function showNotFound(){
+async function showNotFound(){
+  const tHtml=await tallyHTML();
   card.innerHTML=`
     <div class="alert danger">
       <div class="title"><i class="ti ti-x"></i> No encontrado</div>
       <div class="body">No se encontró ese nombre en el registro. Verifique la ortografía e intente de nuevo.</div>
     </div>
-    <div class="center"><button class="btn-secondary" id="btnRetry">Intentar de nuevo</button></div>
-    ${tallyHTML()}`;
+    <div class="center"><button class="btn-secondary" id="btnRetry">Intentar de nuevo</button></div>${tHtml}`;
   document.getElementById("btnRetry").addEventListener("click",showType);
 }
 
-function showAmbiguous(matches){
+async function showAmbiguous(matches){
+  const tHtml=await tallyHTML();
   card.innerHTML=`<p style="font-size:13px;color:#666;margin-bottom:12px">Se encontraron varios resultados. ¿Cuál es usted?</p>`
-    +matches.map(s=>`<div class="match-item" data-id="${s.id}">${s.label}</div>`).join("")
-    +tallyHTML();
+    +matches.map(s=>`<div class="match-item" data-id="${s.id}">${s.label}</div>`).join("")+tHtml;
   card.querySelectorAll(".match-item").forEach(el=>{
-    el.addEventListener("click",()=>{
+    el.addEventListener("click",async()=>{
       const s=ROSTER.find(r=>r.id===el.dataset.id);
-      const votes=getVotes();
-      if(votes[s.id]!==undefined){showAlready(s,votes[s.id]);return;}
+      const status=await apiCheck(s.id);
+      if(status.voted){showAlready(s,status.choice);return;}
       showConfirm(s);
     });
   });
 }
 
-function showConfirm(s){
+async function showConfirm(s){
+  const tHtml=await tallyHTML();
   card.innerHTML=`
     <div class="center">
       <p class="confirm-q">¿Es usted?</p>
@@ -225,52 +228,52 @@ function showConfirm(s){
         <button class="btn-secondary" id="btnNotMe">No soy yo</button>
         <button class="btn-primary" id="btnYesMe"><i class="ti ti-check"></i> Sí, soy yo</button>
       </div>
-    </div>
-    ${tallyHTML()}`;
+    </div>${tHtml}`;
   document.getElementById("btnNotMe").addEventListener("click",showType);
   document.getElementById("btnYesMe").addEventListener("click",()=>showReady(s));
 }
 
-function showReady(s){
+async function showReady(s){
   const firstName=s.label.split(" ").slice(2).join(" ");
+  const tHtml=await tallyHTML();
   card.innerHTML=`
     <div class="center">
       <p style="font-size:13px;color:#666;margin-bottom:14px">Bienvenido/a, <strong>${firstName}</strong>. ¡Es su turno!</p>
       <button class="btn-primary" id="btnFlip"><i class="ti ti-coin"></i> Lanzar moneda</button>
-    </div>
-    ${tallyHTML()}`;
+    </div>${tHtml}`;
   document.getElementById("btnFlip").addEventListener("click",()=>doFlip(s));
 }
 
-function doFlip(s){
+async function doFlip(s){
   const choice=Math.random()<.5?"A":"B";
   coin.className="coin flip-"+choice.toLowerCase();
-  card.innerHTML=`<div class="center" style="color:#888;font-size:14px">Lanzando...</div>${tallyHTML()}`;
-  setTimeout(()=>{
-    saveVote(s.id,choice);
-    showDone(choice);
+  card.innerHTML=`<div class="center" style="color:#888;font-size:14px;padding:1rem 0">Lanzando...</div>`;
+  setTimeout(async()=>{
+    const res=await apiVote(s.id,s.label,choice);
+    if(res.error==="already_voted"){showAlready(s,res.choice);return;}
+    showDone(res.choice||choice);
   },2800);
 }
 
-function showDone(choice){
+async function showDone(choice){
   const label=choice==="A"?"10:00 – 11:00 A.M.":"4:00 – 5:00 P.M.";
+  const tHtml=await tallyHTML();
   card.innerHTML=`
     <div class="center">
       <p class="result-label">${label}</p>
       <p class="result-ok"><i class="ti ti-check"></i> Voto registrado</p>
-    </div>
-    ${tallyHTML()}`;
+    </div>${tHtml}`;
 }
 
-function showAlready(s,choice){
+async function showAlready(s,choice){
   const label=choice==="A"?"10:00 – 11:00 A.M.":"4:00 – 5:00 P.M.";
   coin.style.transform=choice==="B"?"rotateY(180deg)":"rotateY(0deg)";
+  const tHtml=await tallyHTML();
   card.innerHTML=`
     <div class="alert success">
       <div class="title"><i class="ti ti-check"></i> Ya votó</div>
       <div class="body">Su voto: ${label}</div>
-    </div>
-    ${tallyHTML()}`;
+    </div>${tHtml}`;
 }
 
 showType();
